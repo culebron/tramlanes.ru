@@ -12,35 +12,18 @@ RUN apt-get update \
 	locales \
 	python3-pip \
 	python3-dev \
-	python3.8-dev \
 	python3-setuptools \
-	cython3 \
-	proj-bin \
-	unzip \
-	wget
+	proj-bin
 
 RUN pip3 install wheel
-
-RUN ldconfig && \
-	pip3 install -U \
-		argh \
-		fastkml \
-		geojson \
-		geopandas \
-		Jinja2 \
-		lxml \
-		polyline \
-		psycopg2 \
-		requests_cache \
-		rtree \
-		pyproj\<3.0
-
+COPY requirements.txt /tmp/requirements.txt
+RUN ldconfig && pip3 install -U -r /tmp/requirements.txt
 RUN ldconfig && pip3 install -U ipdb
 
-RUN mkdir /calculator
-COPY calculator /calculator
+RUN mkdir /calc
 
-RUN locale-gen en_US.UTF-8o
+RUN locale-gen en_US.UTF-8
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
-RUN echo "cd calculator && python3 main.py" > /make-rating.sh
+RUN echo "cd calc && python3 main.py" > /make-rating.sh
+RUN echo "cd calc && python3 render.py html/index.template.html build/bus-lanes.geojson build/bus-lanes.csv build/index.html" > /render.sh
