@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  calc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    volumes:
+      - ./calculator:/calculator
+      - ./tmp:/tmp
+
+    command: sh /make-rating.sh
+    # entrypoint: tail -f /dev/null

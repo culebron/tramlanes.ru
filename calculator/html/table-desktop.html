@@ -1,0 +1,22 @@
+				<table class='sortable js-table {{ extra_class }}'>
+					<thead>
+						<tr title='Нажмите чтобы отсортировать по колонке'>
+							<td class='r'><span class='under-dash'>№</span></td>
+							<td><span class='under-dash'>город</span></td>
+							<td class='r'><span class='under-dash' id='js-default-sorting'>доля<br>обособления</span></td>
+							<td class='r xs-hide'><span class='under-dash'>длина сети</span><br> (км)</td>
+							<td class='r xs-hide'><span class='under-dash'>население</span><br> (тыс.чел)</td>
+						</tr>
+					</thead>
+					<tbody>
+						{% for city in cities %}
+							<tr>
+								<td class='r'>{{ loop.index }}</td>
+								<td><a href='#' data-extent='[[{{ city.minx }}, {{city.miny}}], [{{ city.maxx }}, {{ city.maxy }}]]'  class='js-go-to-city under-dash' title='Нажмите чтобы увидеть на карте'>{{ city.short_name }}</a></td>
+								<td class='r'>{% if city.dedicated_share*100 > 80 %}<b>{% endif %}{{ (city.dedicated_share*100)|round(1) }}%{% if city.dedicated_share*100 > 80 %}</b>{% endif %}</td>
+								<td class='r xs-hide'>{{ (city.lanes_length/1000)|round(0)|int }}</td>
+								<td class='r xs-hide'>{{ (city.population/1000)|round(0)|int }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>

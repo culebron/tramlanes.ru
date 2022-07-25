@@ -1,0 +1,16 @@
+				<table class='expand js-table {{ extra_class }}'>
+					{% for city in cities %}
+						<tr>
+							<td class='r'>{{ loop.index }}</td>
+							<td class='font-larger'><a href='#' data-extent='[[{{ city.minx }}, {{city.miny}}], [{{ city.maxx }}, {{ city.maxy }}]]' class='js-go-to-city'>{{ city.short_name }}</a></td>
+							<td class='font-larger r'>{% if city.dedicated_share*100>80 %}<b>{% endif %}{{ (city.dedicated_share*100)|round(1) }}%{% if city.dedicated_share*100>80 %}</b>{% endif %}</td>
+						</tr>
+						<tr class='xs-show'>
+							<td></td>
+							<td colspan='2' class='padding5-b font-smaller'>
+								{{ (city.population/1000)|round(0)|int }} тыс.ч,<br/>
+								сеть {{ (city.lanes_length/1000)|round(0)|int }} км
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
