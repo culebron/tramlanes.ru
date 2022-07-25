@@ -11,6 +11,16 @@ WGS = 4326
 SIB = pyproj.crs.ProjectedCRS(pyproj.crs.coordinate_operation.AlbersEqualAreaConversion(52, 64, 0, 105, 18500000, 0), name='Albers Siberia')
 
 
+CITIES_POPULATION = 'src/city-population.csv'
+MUNICIPALITIES_BORDERS = 'src/muni.geojson'
+NAMES_CORRECTIONS = 'src/alt-name-corrections.csv'
+MOW_BORDERS = 'src/mow.geojson'
+SPB_BORDERS = 'src/spb.geojson'
+LANES_MAP_FILE = '/tmp/Обособление трамвая в РФ.kml'
+RESULT_GEOJSON = 'build/tram-lanes.geojson'
+RESULT_CSV = 'build/tram-lanes.csv'
+
+
 def sh(*args):
 	cl = ' '.join(str(i) for i in args)
 	print(cl)
@@ -56,26 +66,25 @@ def match_cities(muni_df: gpd.GeoDataFrame, pop_df: pd.DataFrame):
 def render_page(outfile='build/index.html'):
 	print('executing main')
 	# параметр функции group_data - id карты гугла
-	muni = gpd.read_file('src/muni.geojson')
+	muni = gpd.read_file(MUNICIPALITIES_BORDERS)
 	muni2 = muni.dissolve('name', {'alt_name': 'first'}).reset_index()
 
 	# коррекция имён - добавляем alt_name где он необходим
-	corrections = pd.read_csv('src/alt-name-corrections.csv')
+	corrections = pd.read_csv(NAMES_CORRECTIONS)
 	corrections_dict = dict(zip(corrections['name'].values, corrections['alt_name'].values))
 	print(corrections_dict)
 	muni2['alt_name'] = muni2.apply(lambda row: row['alt_name'] or corrections_dict.get(row['name'], None), axis=1)
 
-	borders_file = pd.concat([muni2, gpd.read_file('src/mow.geojson'), gpd.read_file('src/spb.geojson')])
+	borders_file = pd.concat([muni2, gpd.read_file(MOW_BORDERS), gpd.read_file(SPB_BORDERS)])
 
-	lanes_map_file = '/tmp/Обособление трамвая в РФ.kml'
-	# if not os.path.exists(lanes_map_file):
+	# if not os.path.exists(LANES_MAP_FILE):
 	# 	map_id = '1DFLp5plaHPiIvVCgIWfb-cxRHJ9vBPg5'
 	# 	print('downloading')
-	# 	sh(f'wget "http://www.google.com/maps/d/kml?mid={map_id}&forcekml=1" -O {lanes_map_file}')
+	# 	sh(f'wget "http://www.google.com/maps/d/kml?mid={map_id}&forcekml=1" -O {LANES_MAP_FILE}')
 
 	k = kml.KML()
 	# open & encoding - для декодирования файлов при открытии, потому что в системе по умолчанию может стоять кодировка ascii
-	with open(lanes_map_file, encoding='utf-8') as f:
+	with open(LANES_MAP_FILE, encoding='utf-8') as f:
 		# а плагин сам ещё раскодирует utf-8, поэтому закодировать обратно
 		k.from_string(f.read().encode('utf-8'))
 
@@ -100,7 +109,7 @@ def render_page(outfile='build/index.html'):
 	lanes['lanes_length'] = lanes['geometry'].to_crs(SIB).length
 	lanes['dedicated_length'] = (lanes['dedication'] > 2) * lanes['lanes_length']
 
-	populations = pd.read_csv('src/city-population.csv')
+	populations = pd.read_csv(CITIES_POPULATION)
 	matched_cities = match_cities(borders_file, populations)
 
 	displayed_lanes = gpd.sjoin(lanes, matched_cities, how='inner', op='intersects')
@@ -108,24 +117,15 @@ def render_page(outfile='build/index.html'):
 	displayed_lanes = displayed_lanes[displayed_lanes['geometry'].apply(lambda g: len(g.coords) > 1)].copy()
 	displayed_lanes['geometry'] = displayed_lanes['geometry'].apply(lambda g: LineString([xy[:2] for xy in list(g.coords)]))
 
-	result_geojson = 'build/tram-lanes.geojson'
-
-	displayed_lanes.to_file(result_geojson)
+	displayed_lanes.to_file(RESULT_GEOJSON)
 
 	stat_table = displayed_lanes.dissolve('short_name', {'lanes_length': 'sum', 'dedicated_length': 'sum', 'population': 'first'}).reset_index()
 	stat_table = pd.DataFrame(stat_table.join(stat_table.bounds).drop('geometry', axis=1).copy())
 	stat_table['dedicated_share'] = stat_table['dedicated_length'] / stat_table['lanes_length']
 	stat_table['rating'] = stat_table['dedicated_share'] * stat_table['dedicated_length']
 
-	# if sort_col:
-	# 	df.sort_values(sort_col, ascending=False, inplace=True)
-	# df = gpd.GeoDataFrame(df, crs=df.crs).to_crs(aqtash.CRS_DICT[4326])
-	# return df.join(df.bounds)
-
 	stat_table.sort_values('dedicated_share', ascending=False, inplace=True)
 
-	result_csv = 'build/tram-lanes.csv'
+	stat_table.to_csv(RESULT_CSV, index=False)
 
-	stat_table.to_csv(result_csv, index=False)
-
-	sh('python3 render.py', 'html/index.template.html', result_geojson, result_csv, outfile)
+	sh('python3 render.py', 'html/index.template.html', RESULT_GEOJSON, RESULT_CSV, outfile)
