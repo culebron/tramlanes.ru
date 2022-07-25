@@ -1,14 +1,11 @@
 from fastkml import kml
+from render import render
 from shapely.geometry import LineString
 import argh
 import geopandas as gpd
 import os
 import pandas as pd
 import pyproj
-
-
-WGS = 4326
-SIB = pyproj.crs.ProjectedCRS(pyproj.crs.coordinate_operation.AlbersEqualAreaConversion(52, 64, 0, 105, 18500000, 0), name='Albers Siberia')
 
 
 CITIES_POPULATION = 'src/city-population.csv'
@@ -19,6 +16,10 @@ SPB_BORDERS = 'src/spb.geojson'
 LANES_MAP_FILE = '/tmp/Обособление трамвая в РФ.kml'
 RESULT_GEOJSON = 'build/tram-lanes.geojson'
 RESULT_CSV = 'build/tram-lanes.csv'
+
+
+WGS = 4326
+SIB = pyproj.crs.ProjectedCRS(pyproj.crs.coordinate_operation.AlbersEqualAreaConversion(52, 64, 0, 105, 18500000, 0), name='Albers Siberia')
 
 
 def sh(*args):
@@ -128,4 +129,4 @@ def render_page(outfile='build/index.html'):
 
 	stat_table.to_csv(RESULT_CSV, index=False)
 
-	sh('python3 render.py', 'html/index.template.html', RESULT_GEOJSON, RESULT_CSV, outfile)
+	render('html/index.template.html', RESULT_GEOJSON, RESULT_CSV, outfile)
