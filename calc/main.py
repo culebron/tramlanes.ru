@@ -3,7 +3,6 @@ from render import render
 from shapely.geometry import LineString
 import argh
 import geopandas as gpd
-import os
 import pandas as pd
 import pyproj
 
@@ -20,12 +19,6 @@ RESULT_CSV = 'build/tram-lanes.csv'
 
 WGS = 4326
 SIB = pyproj.crs.ProjectedCRS(pyproj.crs.coordinate_operation.AlbersEqualAreaConversion(52, 64, 0, 105, 18500000, 0), name='Albers Siberia')
-
-
-def sh(*args):
-	cl = ' '.join(str(i) for i in args)
-	print(cl)
-	os.system(cl)
 
 
 def match_cities(muni_df: gpd.GeoDataFrame, pop_df: pd.DataFrame):
