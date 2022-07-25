@@ -8,5 +8,4 @@ dist
 __pycache_
 data
 .hg
-tmp
-*.qgs
+deploy.sh
