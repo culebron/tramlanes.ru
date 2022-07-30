@@ -1,5 +1,5 @@
 from fastkml import kml
-from render import render
+from render import render_cli
 from shapely.geometry import LineString
 import argh
 import geopandas as gpd
@@ -122,4 +122,4 @@ def render_page(outfile='build/index.html'):
 
 	stat_table.to_csv(RESULT_CSV, index=False)
 
-	render('html/index.template.html', RESULT_GEOJSON, RESULT_CSV, outfile)
+	render_cli('html/index.template.html', RESULT_GEOJSON, RESULT_CSV, outfile)
